@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
     Tabs, TabsList, TabsTrigger, TabsContent
 } from "@/components/ui/tabs"
@@ -36,6 +36,7 @@ import { Card } from "@/components/ui/card"
 import { ROUTER } from '../../utils/routes'
 import { useNavigate } from 'react-router-dom'
 import { GENDER } from '../../utils/fixedData'
+import LoadingBar from 'react-top-loading-bar'
 
 
 
@@ -58,6 +59,7 @@ const StudentList = () => {
     const { studentList, currentPage, totalPages, isLoading } = useSelector(state => state.student);
     const [page, setPage] = useState(1);
     const navigate = useNavigate()
+    const loadingBarRef = useRef(null)
 
     const formik = useFormik({
         initialValues: formSchema,
@@ -90,17 +92,55 @@ const StudentList = () => {
     const { values, errors, touched, handleSubmit, handleBlur, handleChange } = formik
 
     useEffect(() => {
+        if (isLoading) {
+            loadingBarRef.current?.continuousStart()
+        } else {
+            loadingBarRef.current?.complete()
+        }
+    }, [isLoading])
+
+    useEffect(() => {
         try {
-            dispatch(getStudentListThunk({ page })).unwrap()
-        } catch  {
+            loadingBarRef.current?.continuousStart()
+            dispatch(getStudentListThunk({ page }))
+                .unwrap()
+                .finally(() => {
+                    loadingBarRef.current?.complete()
+                })
+        } catch {
+            loadingBarRef.current?.complete()
             toast.error('Something went wrong. Please try again.', {
                 duration: 3000,
             });
         }
     }, [dispatch, page])
 
+    const TableRowSkeleton = () => (
+        <TableRow>
+            <TableCell className="px-6 py-4">
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </TableCell>
+            <TableCell className="px-6 py-4">
+                <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </TableCell>
+            <TableCell className="px-6 py-4">
+                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+            </TableCell>
+            <TableCell className="px-6 py-4">
+                <div className="h-4 w-12 bg-gray-200 rounded animate-pulse"></div>
+            </TableCell>
+            <TableCell className="px-6 py-4">
+                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+            </TableCell>
+            <TableCell className="px-6 py-4">
+                <div className="h-10 w-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            </TableCell>
+        </TableRow>
+    )
+
     return (
         <div>
+            <LoadingBar color="#ef4444" ref={loadingBarRef} />
 
             <div className='flex justify-between'>
                 <div>
@@ -225,7 +265,11 @@ const StudentList = () => {
                         </TableHeader>
 
                         <TableBody>
-                            {studentList?.length > 0 ? (
+                            {isLoading ? (
+                                Array(5).fill(0).map((_, index) => (
+                                    <TableRowSkeleton key={index} />
+                                ))
+                            ) : studentList?.length > 0 ? (
                                 studentList.map((student, index) => (
                                     <TableRow
                                         key={index}
@@ -254,7 +298,7 @@ const StudentList = () => {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className='px-6 py-6 text-center text-gray-400'>
+                                    <TableCell colSpan={6} className='px-6 py-6 text-center text-gray-400'>
                                         No students found.
                                     </TableCell>
                                 </TableRow>

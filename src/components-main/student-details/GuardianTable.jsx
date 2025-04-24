@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
     Table,
     TableBody,
@@ -14,10 +14,25 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddIconSvg, EditSvg } from '../../assets/svg/Svg';
 import { Button } from '../../components/ui/button';
+import { useParams } from 'react-router-dom';
+import { getSingleGuardiansThunk } from '../../store/thunks/studentThunk';
 
 const GuardianTable = ({ onAddGuardian }) => {
 
+    const dispatch = useDispatch()
+    const { id } = useParams()
+
     const { userGuardian } = useSelector(state => state.student.studentInfo.demographicsTab);
+    const { selectedGuardian } = useSelector(state => state.student.studentInfo.demographicsTab)
+    console.log('selectedGuardian', selectedGuardian)
+
+    const getGuaridianData = async (guardianId) => {
+        try {
+            await dispatch(getSingleGuardiansThunk({ studentId: id, guardianId })).unwrap()
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
 
     return (
         <div>
@@ -61,7 +76,7 @@ const GuardianTable = ({ onAddGuardian }) => {
                                                     </div>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-40">
-                                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => getGuaridianData(student?._id)}>Edit</DropdownMenuItem>
                                                     <DropdownMenuItem>Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>

@@ -1,7 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
     addGuardianThunk,
+    addMentorsThunk,
     addStudentThunk,
+    getSingleGuardiansThunk,
     getStudentDetailThunk,
     getStudentListThunk,
     updateUserProfileTab,
@@ -113,12 +115,36 @@ const studentSlice = createSlice({
                 state.isLoading = true
             })
             .addCase(addGuardianThunk.fulfilled, (state) => {
-                state.isLoading = false,
-                    state.errors = null
+                state.isLoading = false
+                state.errors = null
             })
             .addCase(addGuardianThunk.rejected, (state, action) => {
-                state.isLoading = false,
-                    state.errors = action.payload
+                state.isLoading = false
+                state.errors = action.payload
+            })
+            .addCase(addMentorsThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(addMentorsThunk.fulfilled, (state) => {
+                state.isLoading = false
+                state.errors = null
+            })
+            .addCase(addMentorsThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+            .addCase(getSingleGuardiansThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(getSingleGuardiansThunk.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.studentInfo.demographicsTab.selectedGuardian = action.payload
+            })
+            .addCase(getSingleGuardiansThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
             })
     },
 });

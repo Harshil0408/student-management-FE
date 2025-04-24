@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, useState, forwardRef } from 'react';
+import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } from 'react';
 import UserProfile from '../components-main/student-details/UserProfile';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChanges } from '../store/slices/studentSlice';
@@ -9,6 +9,7 @@ import GuardianTable from '../components-main/student-details/GuardianTable';
 import GuardianForm from '../components-main/student-details/GuardianForm';
 import MentorsTable from '../components-main/student-details/MentorsTable';
 import MentorsForm from '../components-main/student-details/MentorsForm';
+import LoadingBar from 'react-top-loading-bar';
 
 const countDifferences = (dbData, formData) => {
     let changes = 0;
@@ -98,6 +99,8 @@ const initialMentorsData = {
 const Profile = forwardRef(({ currentTab }, ref) => {
     const dispatch = useDispatch();
     const { id } = useParams();
+    const loadingBarRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const studentDetail = useSelector(state => state.student.studentInfo.demographicsTab.userProfileData);
 
@@ -107,10 +110,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const [profileFormData, setProfileFormData] = useState(null);
     const [profileChanges, setProfileChanges] = useState(0);
 
-    console.log('profileDbData', profileDbData)
-    console.log('profileFormData', profileFormData)
-
-
     const [guardianDbData, setGuardianDbData] = useState(initialGuardianData);
     const [guardianFormData, setGuardianFormData] = useState(initialGuardianData);
     const [guardianChanges, setGuardianChanges] = useState(0);
@@ -119,10 +118,26 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const [mentorsFormData, setmentorsFormData] = useState(initialMentorsData)
     const [mentorsChanges, setmentorsChanges] = useState(0)
 
+    useEffect(() => {
+        const fetchData = async () => {
+            if (id) {
+                try {
+                    loadingBarRef.current?.continuousStart();
+                    setIsLoading(true);
+                    await dispatch(getStudentDetailThunk(id)).unwrap();
+                } catch (error) {
+                    console.error('Error fetching student details:', error);
+                } finally {
+                    loadingBarRef.current?.complete();
+                    setIsLoading(false);
+                }
+            }
+        };
+        fetchData();
+    }, [id, dispatch]);
 
     useEffect(() => {
         if (studentDetail) {
-            console.log('Reinitializing form data with:', studentDetail);
             const initialData = getInitialProfileData(studentDetail);
             setProfileDbData(initialData);
             setProfileFormData(initialData);
@@ -156,9 +171,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     useEffect(() => {
         if (mentorsDbData && mentorsFormData) {
             const changes = countDifferences(mentorsDbData, mentorsFormData);
-            console.log('Calculating mentor changes...');
-            console.log('Previous changes:', mentorsChanges);
-            console.log('New changes:', changes);
 
             if (changes !== mentorsChanges) {
                 setmentorsChanges(changes);
@@ -168,7 +180,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     }, [mentorsFormData, mentorsDbData]);
 
     const handleFieldChange = (fieldPath, value) => {
-        console.log(`Updating field ${fieldPath} with value:`, value); // Debug log
         setProfileFormData(prev => {
             const newValues = { ...prev };
             const pathParts = fieldPath.split('.');
@@ -182,7 +193,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                 newValues[fieldPath] = value;
             }
 
-            console.log('New form data:', newValues); // Debug log
             return newValues;
         });
     };
@@ -198,7 +208,7 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const saveChanges = async () => {
         if (!id) return;
 
-
+        loadingBarRef.current?.continuousStart();
         try {
             if (visibleSection === "default" && profileChanges > 0) {
                 const payload = {
@@ -241,6 +251,8 @@ const Profile = forwardRef(({ currentTab }, ref) => {
             }
         } catch (err) {
             console.error('Failed in saveChanges:', err);
+        } finally {
+            loadingBarRef.current?.complete();
         }
     };
 
@@ -286,21 +298,174 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         setmentorsChanges(0)
     }
 
+    const UserProfileSkeleton = () => (
+        <div className="w-1/2 p-6 bg-white rounded-xl shadow-sm animate-pulse">
+            <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
+            <div className="space-y-6">
+                <div className="space-y-4">
+                    <div className="h-5 w-32 bg-gray-200 rounded"></div>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="h-5 w-32 bg-gray-200 rounded"></div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="h-5 w-32 bg-gray-200 rounded"></div>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                                <div className="h-10 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                                <div className="h-10 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                                <div className="h-10 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const DemographicsSkeleton = () => (
+        <div className="w-1/2 p-6 bg-white rounded-xl shadow-sm animate-pulse">
+            <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
+            <div className="space-y-6">
+                <div className="space-y-4">
+                    <div className="h-5 w-32 bg-gray-200 rounded"></div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="h-5 w-36 bg-gray-200 rounded"></div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-28 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                            <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="h-5 w-28 bg-gray-200 rounded"></div>
+                    <div className="space-y-2">
+                        <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                        <div className="h-32 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const TableSkeleton = () => (
+        <div className="w-full mt-6 p-6 bg-white rounded-xl shadow-sm animate-pulse">
+            <div className="flex justify-between items-center mb-6">
+                <div className="h-8 w-48 bg-gray-200 rounded"></div>
+                <div className="h-9 w-24 bg-gray-200 rounded"></div>
+            </div>
+            <div className="rounded-lg border border-gray-200 overflow-hidden">
+                <div className="h-12 bg-gray-100 flex">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="flex-1 px-6 py-3">
+                            <div className="h-4 bg-gray-200 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+                {[1, 2, 3].map((row) => (
+                    <div key={row} className="h-16 border-t border-gray-200 flex items-center">
+                        {[1, 2, 3, 4, 5].map((col) => (
+                            <div key={col} className="flex-1 px-6">
+                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
     return (
         <div>
+            <LoadingBar color="#ef4444" ref={loadingBarRef} />
+            
             {visibleSection === "default" && (
                 <>
                     <div className='flex justify-between'>
-                        <UserProfile
-                            values={profileFormData}
-                            onChange={handleFieldChange}
-                            onSubmit={(e) => e.preventDefault()}
-                            changedFieldsCount={profileChanges}
-                        />
-                        <Demographics />
+                        {isLoading ? (
+                            <>
+                                <UserProfileSkeleton />
+                                <DemographicsSkeleton />
+                            </>
+                        ) : (
+                            <>
+                                <UserProfile
+                                    values={profileFormData}
+                                    onChange={handleFieldChange}
+                                    onSubmit={(e) => e.preventDefault()}
+                                    changedFieldsCount={profileChanges}
+                                />
+                                <Demographics />
+                            </>
+                        )}
                     </div>
-                    <GuardianTable onAddGuardian={handleAddGuardian} />
-                    <MentorsTable onAddMentor={handleAddMentor} />
+                    {isLoading ? (
+                        <>
+                            <TableSkeleton />
+                            <TableSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <GuardianTable onAddGuardian={handleAddGuardian} />
+                            <MentorsTable onAddMentor={handleAddMentor} />
+                        </>
+                    )}
                 </>
             )}
 

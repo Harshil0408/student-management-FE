@@ -83,3 +83,27 @@ export const addMentorsThunk = createAsyncThunk(
         }
     }
 )
+
+export const getSingleGuardiansThunk = createAsyncThunk(
+    'student/getSingleGuardian',
+    async ({ studentId, guardianId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.get(`/api/students/${studentId}/guardians/${guardianId}`)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error.response.data)
+        }
+    }
+)
+
+export const getSingleMentorsThunk = createAsyncThunk(
+    'student/getSingleMentor',
+    async ({ studentId, mentorId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.get(`/api/students/${studentId}/mentors/${mentorId}`)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error.response.data)
+        }
+    }
+)

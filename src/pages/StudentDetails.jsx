@@ -21,6 +21,7 @@ import ConfirmationModal from '../components/ui/ConfirmationModal';
 import { toast } from 'sonner';
 
 const StudentDetails = () => {
+
     const { id } = useParams();
     const dispatch = useDispatch();
     const { isLoading } = useSelector(state => state.student);
@@ -47,11 +48,6 @@ const StudentDetails = () => {
 
             if (currentTab === "profile") {
                 saveSuccessful = await profileRef.current.saveChanges();
-
-                if (!saveSuccessful) {
-                    toast.error('Please fill all of the input the fields');
-                    return;
-                }
             }
             if (currentTab === "enrollment") {
                 saveSuccessful = await enrollmentRef.current.saveChanges();
@@ -106,7 +102,6 @@ const StudentDetails = () => {
         dispatch(setChanges(0));
         dispatch(getStudentDetailThunk(id)).unwrap()
             .then(() => {
-                console.log('Data refreshed after tab change');
                 setCurrentTab(pendingTab);
                 setPendingTab(null);
                 setShowConfirmation(false);
