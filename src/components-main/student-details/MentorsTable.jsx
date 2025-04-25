@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
     Table,
     TableBody,
@@ -14,11 +14,23 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from '../../components/ui/button';
 import { AddIconSvg, EditSvg } from '../../assets/svg/Svg';
+import { getSingleMentorsThunk } from '../../store/thunks/studentThunk';
+import { useParams } from 'react-router-dom';
 
 
 const MentorsTable = ({ onAddMentor }) => {
 
+    const dispatch = useDispatch()
+    const { id } = useParams()
     const { userMentors } = useSelector(state => state.student.studentInfo.demographicsTab);
+
+    const getSingleMentorData = async (mentorId) => {
+        try {
+            await dispatch(getSingleMentorsThunk({ studentId: id, mentorId })).unwrap()
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
 
     return (
         <div>
@@ -63,7 +75,7 @@ const MentorsTable = ({ onAddMentor }) => {
                                                         </div>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-40">
-                                                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => getSingleMentorData(student._id)} >Edit</DropdownMenuItem>
                                                         <DropdownMenuItem>Delete</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>

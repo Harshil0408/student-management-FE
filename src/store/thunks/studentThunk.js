@@ -119,3 +119,15 @@ export const getSingleMentorsThunk = createAsyncThunk(
         }
     }
 )
+
+export const updateMentorThunk = createAsyncThunk(
+    'student/updateMentor',
+    async ({ data, studentId, mentorId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/api/students/${studentId}/mentors/${mentorId}`, data)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error.response.data)
+        }
+    }
+)

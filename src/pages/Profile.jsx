@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } f
 import UserProfile from '../components-main/student-details/UserProfile';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChanges } from '../store/slices/studentSlice';
-import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk } from '../store/thunks/studentThunk';
+import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk, updateMentorThunk } from '../store/thunks/studentThunk';
 import { useParams } from 'react-router-dom';
 import Demographics from '../components-main/student-details/Demographics';
 import GuardianTable from '../components-main/student-details/GuardianTable';
@@ -104,6 +104,8 @@ const Profile = forwardRef(({ currentTab }, ref) => {
 
     const studentDetail = useSelector(state => state.student.studentInfo.demographicsTab.userProfileData);
     const selectedGuardian = useSelector(state => state.student.studentInfo.demographicsTab.selectedGuardian);
+    const selectedMentor = useSelector(state => state.student.studentInfo.demographicsTab.selectedMentor)
+    console.log('selectedMentor', selectedMentor)
 
     const [visibleSection, setVisibleSection] = useState("default");
 
@@ -243,9 +245,15 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                     data: mentorsFormData,
                     studentId: id
                 };
-                await dispatch(addMentorsThunk(mentorPayload)).unwrap();
-                setmentorsFormData(initialMentorsData);
-                setmentorsDbData(initialMentorsData);
+                if (selectedMentor?._id) {
+                    await dispatch(updateMentorThunk({
+                        data: mentorsFormData,
+                        studentId: id,
+                        mentorId: selectedMentor?._id
+                    })).unwrap()
+                } else {
+                    await dispatch(addMentorsThunk(mentorPayload)).unwrap();
+                }
                 setmentorsChanges(0);
                 setVisibleSection("default");
             }
@@ -317,11 +325,50 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         }
     };
 
+    const handleEditMentor = () => {
+        if (selectedMentor) {
+            setVisibleSection("mentorsForm")
+            const formattedMentorsData = {
+                first_name: selectedMentor?.first_name,
+                last_name: selectedMentor?.last_name,
+                email: selectedMentor?.email,
+                phone: selectedMentor?.phone,
+                relationship: selectedMentor?.relationship,
+                address: selectedMentor?.address,
+                city: selectedMentor?.city,
+                state: selectedMentor?.state,
+                zip_code: selectedMentor?.zip_code,
+                referral_source: selectedMentor?.referral_source,
+                proximity: selectedMentor?.proximity,
+                expertise: selectedMentor?.expertise,
+                marital_status: selectedMentor?.marital_status,
+                work_status: selectedMentor?.work_status,
+                status: selectedMentor?.status,
+                type: selectedMentor?.type,
+                screened_date: selectedMentor?.screened_date,
+                employer: selectedMentor?.employer,
+                background_checked: selectedMentor?.background_checked,
+                trained: selectedMentor?.trained,
+                matched: selectedMentor?.matched,
+                status_notes: selectedMentor?.status_notes,
+            }
+            setmentorsFormData(formattedMentorsData)
+            setmentorsDbData(formattedMentorsData)
+            setmentorsChanges(0)
+        }
+    }
+
     useEffect(() => {
         if (selectedGuardian) {
             handleEditGuardian();
         }
     }, [selectedGuardian]);
+
+    useEffect(() => {
+        if (selectedMentor) {
+            handleEditMentor()
+        }
+    }, [selectedMentor])
 
     const handleCancelGuardian = () => {
         setVisibleSection("default");
@@ -329,6 +376,13 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         setGuardianDbData(initialGuardianData);
         setGuardianChanges(0);
     };
+
+    const handleCancelMentor = () => {
+        setVisibleSection("default");
+        setmentorsFormData(initialMentorsData);
+        setmentorsDbData(initialMentorsData);
+        setmentorsChanges(0);
+    }
 
     const handleAddMentor = () => {
         setVisibleSection("mentorsForm")
@@ -523,12 +577,7 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                 <MentorsForm
                     values={mentorsFormData}
                     onChange={handleMentorsFormChange}
-                    onCancel={() => {
-                        setVisibleSection("default");
-                        setmentorsFormData(initialMentorsData);
-                        setmentorsDbData(initialMentorsData);
-                        setmentorsChanges(0);
-                    }}
+                    onCancel={handleCancelMentor}
                 />
             )}
         </div>

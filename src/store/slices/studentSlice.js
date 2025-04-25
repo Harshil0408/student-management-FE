@@ -4,8 +4,11 @@ import {
     addMentorsThunk,
     addStudentThunk,
     getSingleGuardiansThunk,
+    getSingleMentorsThunk,
     getStudentDetailThunk,
     getStudentListThunk,
+    updateGuardianThunk,
+    updateMentorThunk,
     updateUserProfileTab,
 } from "../thunks/studentThunk";
 
@@ -143,6 +146,43 @@ const studentSlice = createSlice({
                 state.studentInfo.demographicsTab.selectedGuardian = action.payload
             })
             .addCase(getSingleGuardiansThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+            .addCase(updateGuardianThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(updateGuardianThunk.fulfilled, (state) => {
+                state.isLoading = false
+                state.errors = null
+                state.studentInfo.demographicsTab.selectedGuardian = null
+            })
+            .addCase(updateGuardianThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+            .addCase(getSingleMentorsThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(getSingleMentorsThunk.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.studentInfo.demographicsTab.selectedMentor = action.payload
+            })
+            .addCase(getSingleMentorsThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+            .addCase(updateMentorThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(updateMentorThunk.fulfilled, (state) => {
+                state.isLoading = false
+                state.studentInfo.demographicsTab.selectedMentor = null
+            })
+            .addCase(updateMentorThunk.rejected, (state, action) => {
                 state.isLoading = false
                 state.errors = action.payload
             })
