@@ -52,7 +52,9 @@ const GuardianForm = ({ values, onChange, onCancel }) => {
         <form onSubmit={formik.handleSubmit}>
             <Card className="px-2 py-6 w-full">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold">Add Guardian</CardTitle>
+                    <CardTitle className="text-2xl font-bold">
+                        {values.guardian.first_name ? 'Edit Guardian' : 'Add Guardian'}
+                    </CardTitle>
                     <CardDescription>Update and manage the Guardian's information</CardDescription>
                 </CardHeader>
 
@@ -115,7 +117,6 @@ const GuardianForm = ({ values, onChange, onCancel }) => {
                         )}
                     </div>
 
-                    {/* Household Income */}
                     <div className="flex flex-col gap-1">
                         <Label>Household Income</Label>
                         <Input
@@ -127,7 +128,6 @@ const GuardianForm = ({ values, onChange, onCancel }) => {
                     </div>
                 </CardContent>
 
-                {/* Switches: 3 in a row */}
                 <CardContent className="grid grid-cols-3 gap-4">
                     {[
                         { label: "Legal Rights", field: "legal_rights" },

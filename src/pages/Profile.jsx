@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } f
 import UserProfile from '../components-main/student-details/UserProfile';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChanges } from '../store/slices/studentSlice';
-import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk } from '../store/thunks/studentThunk';
+import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk } from '../store/thunks/studentThunk';
 import { useParams } from 'react-router-dom';
 import Demographics from '../components-main/student-details/Demographics';
 import GuardianTable from '../components-main/student-details/GuardianTable';
@@ -103,6 +103,7 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const studentDetail = useSelector(state => state.student.studentInfo.demographicsTab.userProfileData);
+    const selectedGuardian = useSelector(state => state.student.studentInfo.demographicsTab.selectedGuardian);
 
     const [visibleSection, setVisibleSection] = useState("default");
 
@@ -210,45 +211,48 @@ const Profile = forwardRef(({ currentTab }, ref) => {
 
         loadingBarRef.current?.continuousStart();
         try {
-            if (visibleSection === "default" && profileChanges > 0) {
-                const payload = {
+            if (profileChanges > 0) {
+                const profilePayload = {
                     data: profileFormData,
                     studentId: id
                 };
-                await dispatch(updateUserProfileTab(payload)).unwrap();
-                await dispatch(getStudentDetailThunk(id)).unwrap();
+                await dispatch(updateUserProfileTab(profilePayload)).unwrap();
                 setProfileChanges(0);
             }
-            else if (visibleSection === "guardianForm" && guardianChanges > 0) {
-                const payload = {
-                    data: guardianFormData,
-                    studentId: id
-                };
-                await dispatch(addGuardianThunk(payload)).unwrap();
-                await dispatch(getStudentDetailThunk(id)).unwrap();
+
+            if (visibleSection === "guardianForm" && guardianChanges > 0) {
+                if (selectedGuardian?._id) {
+                    await dispatch(updateGuardianThunk({
+                        data: guardianFormData,
+                        studentId: id,
+                        guardianId: selectedGuardian._id
+                    })).unwrap();
+                } else {
+                    const guardianPayload = {
+                        data: guardianFormData,
+                        studentId: id
+                    };
+                    await dispatch(addGuardianThunk(guardianPayload)).unwrap();
+                }
                 setGuardianChanges(0);
                 setVisibleSection("default");
             }
-            else if (visibleSection === 'mentorsForm' && mentorsChanges > 0) {
-                const payload = {
+
+            if (visibleSection === 'mentorsForm' && mentorsChanges > 0) {
+                const mentorPayload = {
                     data: mentorsFormData,
                     studentId: id
                 };
-
-                try {
-                    await dispatch(addMentorsThunk(payload)).unwrap();
-
-                    await dispatch(getStudentDetailThunk(id)).unwrap();
-
-                    setmentorsFormData(initialMentorsData);
-                    setmentorsDbData(initialMentorsData);
-                    setmentorsChanges(0);
-                    setVisibleSection("default");
-                    dispatch(setChanges(0));
-                } catch (addError) {
-                    console.error('Error in addMentorsThunk:', addError);
-                }
+                await dispatch(addMentorsThunk(mentorPayload)).unwrap();
+                setmentorsFormData(initialMentorsData);
+                setmentorsDbData(initialMentorsData);
+                setmentorsChanges(0);
+                setVisibleSection("default");
             }
+
+            await dispatch(getStudentDetailThunk(id)).unwrap();
+            dispatch(setChanges(0));
+
         } catch (err) {
             console.error('Failed in saveChanges:', err);
         } finally {
@@ -284,6 +288,41 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         setGuardianChanges(0);
     };
 
+    const handleEditGuardian = () => {
+        if (selectedGuardian) {
+            setVisibleSection("guardianForm");
+            const formattedGuardianData = {
+                guardian: {
+                    first_name: selectedGuardian.guardian?.first_name || "",
+                    last_name: selectedGuardian.guardian?.last_name || "",
+                    email: selectedGuardian.guardian?.email || "",
+                    phone: selectedGuardian.guardian?.phone || "",
+                    address: selectedGuardian.guardian?.address || "",
+                    city: selectedGuardian.guardian?.city || "",
+                    state: selectedGuardian.guardian?.state || "",
+                    zip_code: selectedGuardian.guardian?.zip_code || "",
+                    household_income: selectedGuardian.guardian?.household_income || "",
+                    snap_benifits: selectedGuardian.guardian?.snap_benifits || false,
+                },
+                relationship: selectedGuardian.relationship || "",
+                legal_rights: selectedGuardian.legal_rights || false,
+                emergency_contact: selectedGuardian.emergency_contact || false,
+                autorized_pickup: selectedGuardian.autorized_pickup || false,
+                receives_mail: selectedGuardian.receives_mail || false,
+                custody: selectedGuardian.custody || false,
+            };
+            setGuardianFormData(formattedGuardianData);
+            setGuardianDbData(formattedGuardianData);
+            setGuardianChanges(0);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedGuardian) {
+            handleEditGuardian();
+        }
+    }, [selectedGuardian]);
+
     const handleCancelGuardian = () => {
         setVisibleSection("default");
         setGuardianFormData(initialGuardianData);
@@ -297,6 +336,10 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         setmentorsDbData(initialMentorsData)
         setmentorsChanges(0)
     }
+
+    useEffect(() => {
+        setVisibleSection("default")
+    }, [id])
 
     const UserProfileSkeleton = () => (
         <div className="w-1/2 p-6 bg-white rounded-xl shadow-sm animate-pulse">
@@ -434,7 +477,7 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     return (
         <div>
             <LoadingBar color="#ef4444" ref={loadingBarRef} />
-            
+
             {visibleSection === "default" && (
                 <>
                     <div className='flex justify-between'>

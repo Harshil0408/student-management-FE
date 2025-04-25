@@ -96,6 +96,18 @@ export const getSingleGuardiansThunk = createAsyncThunk(
     }
 )
 
+export const updateGuardianThunk = createAsyncThunk(
+    'student/updateGuardian',
+    async ({ data, studentId, guardianId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/api/students/${studentId}/guardians/${guardianId}`, data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
 export const getSingleMentorsThunk = createAsyncThunk(
     'student/getSingleMentor',
     async ({ studentId, mentorId }, { rejectWithValue }) => {

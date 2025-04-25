@@ -23,12 +23,10 @@ const GuardianTable = ({ onAddGuardian }) => {
     const { id } = useParams()
 
     const { userGuardian } = useSelector(state => state.student.studentInfo.demographicsTab);
-    const { selectedGuardian } = useSelector(state => state.student.studentInfo.demographicsTab)
-    console.log('selectedGuardian', selectedGuardian)
 
     const getGuaridianData = async (guardianId) => {
         try {
-            await dispatch(getSingleGuardiansThunk({ studentId: id, guardianId })).unwrap()
+            await dispatch(getSingleGuardiansThunk({ studentId: id, guardianId })).unwrap();
         } catch (error) {
             console.log('error', error)
         }
