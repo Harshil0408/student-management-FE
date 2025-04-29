@@ -15,7 +15,6 @@ export const getStudentListThunk = createAsyncThunk(
     }
 );
 
-
 export const addStudentThunk = createAsyncThunk(
     'student/addStudent',
     async (data, { rejectWithValue }) => {
@@ -131,3 +130,15 @@ export const updateMentorThunk = createAsyncThunk(
         }
     }
 )
+
+export const upsertStudentDemographicsThunk = createAsyncThunk(
+    'student/upsertStudentDemographics',
+    async ({ studentId, data }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/api/students/${studentId}/demographics`, data);
+            return response.data.demographicsDetails;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);

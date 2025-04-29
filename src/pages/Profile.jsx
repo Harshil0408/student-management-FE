@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } f
 import UserProfile from '../components-main/student-details/UserProfile';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChanges } from '../store/slices/studentSlice';
-import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk, updateMentorThunk } from '../store/thunks/studentThunk';
+import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk, updateMentorThunk, upsertStudentDemographicsThunk } from '../store/thunks/studentThunk';
 import { useParams } from 'react-router-dom';
 import Demographics from '../components-main/student-details/Demographics';
 import GuardianTable from '../components-main/student-details/GuardianTable';
@@ -96,7 +96,22 @@ const initialMentorsData = {
     status_notes: '',
 }
 
+const intialDemographicsData = (dbData) => ({
+    hair_color: dbData?.demographicsDetails?.hair_color,
+    eye_color: dbData?.demographicsDetails?.eye_color,
+    wear_contacts: dbData?.demographicsDetails?.wear_contacts,
+    wear_glasses: dbData?.demographicsDetails?.wear_glasses,
+    has_children: dbData?.demographicsDetails?.has_children,
+    has_legal_history: dbData?.demographicsDetails?.has_legal_history,
+    scars_marks_tattoos: dbData?.demographicsDetails?.scars_marks_tattoos,
+    weight: dbData?.demographicsDetails?.weight,
+    race_ethnicity: dbData?.demographicsDetails?.race_ethnicity,
+    language: dbData?.demographicsDetails?.language,
+    height: dbData?.demographicsDetails?.height,
+})
+
 const Profile = forwardRef(({ currentTab }, ref) => {
+
     const dispatch = useDispatch();
     const { id } = useParams();
     const loadingBarRef = useRef(null);
@@ -105,7 +120,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const studentDetail = useSelector(state => state.student.studentInfo.demographicsTab.userProfileData);
     const selectedGuardian = useSelector(state => state.student.studentInfo.demographicsTab.selectedGuardian);
     const selectedMentor = useSelector(state => state.student.studentInfo.demographicsTab.selectedMentor)
-    console.log('selectedMentor', selectedMentor)
 
     const [visibleSection, setVisibleSection] = useState("default");
 
@@ -120,6 +134,10 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const [mentorsDbData, setmentorsDbData] = useState(initialMentorsData)
     const [mentorsFormData, setmentorsFormData] = useState(initialMentorsData)
     const [mentorsChanges, setmentorsChanges] = useState(0)
+
+    const [demographicDbData, setdemographicDbData] = useState(intialDemographicsData)
+    const [demographicFormData, setdemographicFormData] = useState(intialDemographicsData)
+    const [demographicChanges, setdemographicChanges] = useState(0)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -148,8 +166,12 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     }, [studentDetail, currentTab]);
 
     useEffect(() => {
-        console.log('Current profile form data:', profileFormData);
-    }, [profileFormData]);
+        if (studentDetail) {
+            const initialData = intialDemographicsData(studentDetail)
+            setdemographicDbData(initialData)
+            setdemographicFormData(initialData)
+        }
+    }, [studentDetail, currentTab])
 
     useEffect(() => {
         if (profileDbData && profileFormData) {
@@ -182,6 +204,17 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         }
     }, [mentorsFormData, mentorsDbData]);
 
+    useEffect(() => {
+        if (demographicDbData && demographicFormData) {
+            const changes = countDifferences(demographicDbData, demographicFormData)
+
+            if (changes !== demographicChanges) {
+                setdemographicChanges(changes)
+                dispatch(setChanges(changes))
+            }
+        }
+    }, [demographicDbData, demographicFormData])
+
     const handleFieldChange = (fieldPath, value) => {
         setProfileFormData(prev => {
             const newValues = { ...prev };
@@ -198,6 +231,13 @@ const Profile = forwardRef(({ currentTab }, ref) => {
 
             return newValues;
         });
+    };
+
+    const handleDemographicsChange = (field, value) => {
+        setdemographicFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const handleGuardianFormChange = (values) => {
@@ -220,6 +260,15 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                 };
                 await dispatch(updateUserProfileTab(profilePayload)).unwrap();
                 setProfileChanges(0);
+            }
+
+            if (demographicChanges > 0) {
+                const demographicPayload = {
+                    data: demographicFormData,
+                    studentId: id
+                }
+                await dispatch(upsertStudentDemographicsThunk(demographicPayload)).unwrap()
+                setdemographicChanges(0)
             }
 
             if (visibleSection === "guardianForm" && guardianChanges > 0) {
@@ -548,7 +597,12 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                                     onSubmit={(e) => e.preventDefault()}
                                     changedFieldsCount={profileChanges}
                                 />
-                                <Demographics />
+                                <Demographics
+                                    values={demographicFormData}
+                                    onChange={handleDemographicsChange}
+                                    onSubmit={(e) => e.preventDefault()}
+                                    changedFieldsCount={demographicChanges}
+                                />
                             </>
                         )}
                     </div>
