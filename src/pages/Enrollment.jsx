@@ -9,8 +9,6 @@ const Enrollment = () => {
   const { id } = useParams()
   const dispatch = useDispatch()
 
-  console.log("helo")
-
   const getApplicationStatusData = async () => {
     try {
       await dispatch(getApplicationStatusThunk({ studentId: id })).unwrap()

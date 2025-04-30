@@ -190,3 +190,39 @@ export const getApplicationStatusThunk = createAsyncThunk(
         }
     }
 )
+
+export const addApplicationStatusThunk = createAsyncThunk(
+    'student/addApplicationStatus',
+    async ({ studentId, data }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`/api/students/${studentId}/application-status`, data)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error?.message)
+        }
+    }
+)
+
+export const updateApplicationStatus = createAsyncThunk(
+    'student/updateApplicationStatus',
+    async ({ studentId, applicationStatusId, data }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`/api/student/${studentId}/application-status/${applicationStatusId}`, data)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error?.message)
+        }
+    }
+)
+
+export const deleteApplicationStatus = createAsyncThunk(
+    'student/deleteApplicationStatus',
+    async ({ applicationStatusId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.delete(`/api/student/${applicationStatusId}/application-status`)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error?.message)
+        }
+    }
+)

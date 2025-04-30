@@ -13,6 +13,8 @@ import {
     updateMentorThunk,
     updateUserProfileTab,
     getApplicationStatusThunk,
+    addApplicationStatusThunk,
+    updateApplicationStatus,
 } from "../thunks/studentThunk";
 
 const initialState = {
@@ -60,6 +62,9 @@ const studentSlice = createSlice({
             };
             state.studentInfo.changes += 1;
         },
+        selectApplicationData: (state, action) => {
+            state.studentInfo.enrollmentTab.selectedApplication = action.payload
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -245,8 +250,34 @@ const studentSlice = createSlice({
                 state.isLoading = false;
                 state.errors = action.payload;
             })
+
+            .addCase(addApplicationStatusThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(addApplicationStatusThunk.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.studentInfo.enrollmentTab.applicationData.push(action.payload.applicationStatus)
+            })
+            .addCase(addApplicationStatusThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+
+            .addCase(updateApplicationStatus.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(updateApplicationStatus.fulfilled, (state) => {
+                state.isLoading = false
+                state.errors = null
+            })
+            .addCase(updateApplicationStatus.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
     },
 });
 
-export const { setChanges, updateDemographicsTab } = studentSlice.actions;
+export const { setChanges, updateDemographicsTab, selectApplicationData } = studentSlice.actions;
 export default studentSlice.reducer;
