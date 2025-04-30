@@ -325,5 +325,28 @@ export const LANGUAGE = {
     "OT": "Other"
 }
 
+export const APPLICATION_STATUS = {
+    'AC': 'Accepted',
+    'DE': 'Deferred',
+    'RE': 'Rejected',
+    'TE': 'Terminated',
+    'UR': "Under Review",
+    'SB': "Submitted",
+    "DR": "Draft",
+    "DC": "Draft Completed"
+}
+
+export const APPLICATION_STATUS_REASONS = {
+    'IA': 'Incomplete Application',
+    'MD': 'Missing Documents',
+    'IC': 'Ineligible Criteria',
+    'DA': 'Duplicate Application',
+    'WA': 'Withdrawn by Applicant',
+    'FI': 'Fraudulent Information',
+    'PF': 'Program Full',
+    'OT': 'Other'
+};
+
+
 
 

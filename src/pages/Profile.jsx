@@ -1,15 +1,15 @@
-import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } from 'react';
-import UserProfile from '../components-main/student-details/UserProfile';
+import { useParams } from 'react-router-dom';
+import LoadingBar from 'react-top-loading-bar';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChanges } from '../store/slices/studentSlice';
-import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk, updateMentorThunk, upsertStudentDemographicsThunk } from '../store/thunks/studentThunk';
-import { useParams } from 'react-router-dom';
-import Demographics from '../components-main/student-details/Demographics';
-import GuardianTable from '../components-main/student-details/GuardianTable';
+import UserProfile from '../components-main/student-details/UserProfile';
+import MentorsForm from '../components-main/student-details/MentorsForm';
 import GuardianForm from '../components-main/student-details/GuardianForm';
 import MentorsTable from '../components-main/student-details/MentorsTable';
-import MentorsForm from '../components-main/student-details/MentorsForm';
-import LoadingBar from 'react-top-loading-bar';
+import Demographics from '../components-main/student-details/Demographics';
+import GuardianTable from '../components-main/student-details/GuardianTable';
+import React, { useEffect, useImperativeHandle, useState, forwardRef, useRef } from 'react';
+import { updateUserProfileTab, addGuardianThunk, getStudentDetailThunk, addMentorsThunk, updateGuardianThunk, updateMentorThunk, addStudentDemographicsThunk, updateStudentDemographicsThunk } from '../store/thunks/studentThunk';
 
 const countDifferences = (dbData, formData) => {
     let changes = 0;
@@ -139,81 +139,7 @@ const Profile = forwardRef(({ currentTab }, ref) => {
     const [demographicFormData, setdemographicFormData] = useState(intialDemographicsData)
     const [demographicChanges, setdemographicChanges] = useState(0)
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (id) {
-                try {
-                    loadingBarRef.current?.continuousStart();
-                    setIsLoading(true);
-                    await dispatch(getStudentDetailThunk(id)).unwrap();
-                } catch (error) {
-                    console.error('Error fetching student details:', error);
-                } finally {
-                    loadingBarRef.current?.complete();
-                    setIsLoading(false);
-                }
-            }
-        };
-        fetchData();
-    }, [id, dispatch]);
 
-    useEffect(() => {
-        if (studentDetail) {
-            const initialData = getInitialProfileData(studentDetail);
-            setProfileDbData(initialData);
-            setProfileFormData(initialData);
-        }
-    }, [studentDetail, currentTab]);
-
-    useEffect(() => {
-        if (studentDetail) {
-            const initialData = intialDemographicsData(studentDetail)
-            setdemographicDbData(initialData)
-            setdemographicFormData(initialData)
-        }
-    }, [studentDetail, currentTab])
-
-    useEffect(() => {
-        if (profileDbData && profileFormData) {
-            const changes = countDifferences(profileDbData, profileFormData);
-            setProfileChanges(changes);
-
-            const totalChanges = changes + guardianChanges;
-            dispatch(setChanges(totalChanges));
-        }
-    }, [profileFormData, profileDbData]);
-
-    useEffect(() => {
-        if (guardianDbData && guardianFormData) {
-            const changes = countDifferences(guardianDbData, guardianFormData);
-            setGuardianChanges(changes);
-
-            const totalChanges = changes + profileChanges;
-            dispatch(setChanges(totalChanges));
-        }
-    }, [guardianFormData, guardianDbData]);
-
-    useEffect(() => {
-        if (mentorsDbData && mentorsFormData) {
-            const changes = countDifferences(mentorsDbData, mentorsFormData);
-
-            if (changes !== mentorsChanges) {
-                setmentorsChanges(changes);
-                dispatch(setChanges(changes));
-            }
-        }
-    }, [mentorsFormData, mentorsDbData]);
-
-    useEffect(() => {
-        if (demographicDbData && demographicFormData) {
-            const changes = countDifferences(demographicDbData, demographicFormData)
-
-            if (changes !== demographicChanges) {
-                setdemographicChanges(changes)
-                dispatch(setChanges(changes))
-            }
-        }
-    }, [demographicDbData, demographicFormData])
 
     const handleFieldChange = (fieldPath, value) => {
         setProfileFormData(prev => {
@@ -267,8 +193,12 @@ const Profile = forwardRef(({ currentTab }, ref) => {
                     data: demographicFormData,
                     studentId: id
                 }
-                await dispatch(upsertStudentDemographicsThunk(demographicPayload)).unwrap()
-                setdemographicChanges(0)
+                if (studentDetail.demographicsDetails === null) {
+                    await dispatch(addStudentDemographicsThunk(demographicPayload)).unwrap();
+                } else {
+                    await dispatch(updateStudentDemographicsThunk(demographicPayload)).unwrap();
+                }
+                setdemographicChanges(0);
             }
 
             if (visibleSection === "guardianForm" && guardianChanges > 0) {
@@ -407,18 +337,6 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         }
     }
 
-    useEffect(() => {
-        if (selectedGuardian) {
-            handleEditGuardian();
-        }
-    }, [selectedGuardian]);
-
-    useEffect(() => {
-        if (selectedMentor) {
-            handleEditMentor()
-        }
-    }, [selectedMentor])
-
     const handleCancelGuardian = () => {
         setVisibleSection("default");
         setGuardianFormData(initialGuardianData);
@@ -439,6 +357,93 @@ const Profile = forwardRef(({ currentTab }, ref) => {
         setmentorsDbData(initialMentorsData)
         setmentorsChanges(0)
     }
+    useEffect(() => {
+        const fetchData = async () => {
+            if (id) {
+                try {
+                    loadingBarRef.current?.continuousStart();
+                    setIsLoading(true);
+                    await dispatch(getStudentDetailThunk(id)).unwrap();
+                } catch (error) {
+                    console.error('Error fetching student details:', error);
+                } finally {
+                    loadingBarRef.current?.complete();
+                    setIsLoading(false);
+                }
+            }
+        };
+        fetchData();
+    }, [id, dispatch]);
+
+    useEffect(() => {
+        if (studentDetail) {
+            const initialData = getInitialProfileData(studentDetail);
+            setProfileDbData(initialData);
+            setProfileFormData(initialData);
+        }
+    }, [studentDetail, currentTab]);
+
+    useEffect(() => {
+        if (studentDetail) {
+            const initialData = intialDemographicsData(studentDetail)
+            setdemographicDbData(initialData)
+            setdemographicFormData(initialData)
+        }
+    }, [studentDetail, currentTab])
+
+    useEffect(() => {
+        if (profileDbData && profileFormData) {
+            const changes = countDifferences(profileDbData, profileFormData);
+            setProfileChanges(changes);
+
+            const totalChanges = changes + guardianChanges;
+            dispatch(setChanges(totalChanges));
+        }
+    }, [profileFormData, profileDbData]);
+
+    useEffect(() => {
+        if (guardianDbData && guardianFormData) {
+            const changes = countDifferences(guardianDbData, guardianFormData);
+            setGuardianChanges(changes);
+
+            const totalChanges = changes + profileChanges;
+            dispatch(setChanges(totalChanges));
+        }
+    }, [guardianFormData, guardianDbData]);
+
+    useEffect(() => {
+        if (mentorsDbData && mentorsFormData) {
+            const changes = countDifferences(mentorsDbData, mentorsFormData);
+
+            if (changes !== mentorsChanges) {
+                setmentorsChanges(changes);
+                dispatch(setChanges(changes));
+            }
+        }
+    }, [mentorsFormData, mentorsDbData]);
+
+    useEffect(() => {
+        if (demographicDbData && demographicFormData) {
+            const changes = countDifferences(demographicDbData, demographicFormData)
+
+            if (changes !== demographicChanges) {
+                setdemographicChanges(changes)
+                dispatch(setChanges(changes))
+            }
+        }
+    }, [demographicDbData, demographicFormData])
+
+    useEffect(() => {
+        if (selectedGuardian) {
+            handleEditGuardian();
+        }
+    }, [selectedGuardian]);
+
+    useEffect(() => {
+        if (selectedMentor) {
+            handleEditMentor()
+        }
+    }, [selectedMentor])
 
     useEffect(() => {
         setVisibleSection("default")

@@ -3,6 +3,8 @@ import {
     addGuardianThunk,
     addMentorsThunk,
     addStudentThunk,
+    deleteMentorThunk,
+    deleteSingleGuardianThunk,
     getSingleGuardiansThunk,
     getSingleMentorsThunk,
     getStudentDetailThunk,
@@ -10,6 +12,7 @@ import {
     updateGuardianThunk,
     updateMentorThunk,
     updateUserProfileTab,
+    getApplicationStatusThunk,
 } from "../thunks/studentThunk";
 
 const initialState = {
@@ -31,7 +34,10 @@ const initialState = {
             userProfileData: null,
             demographicsData: null,
         },
-        enrollmentTab: null,
+        enrollmentTab: {
+            applicationData: [],
+            selectedApplication: null,
+        },
         residentialTab: null,
         counselingTab: null,
         incidentsTab: null,
@@ -57,6 +63,7 @@ const studentSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+
             .addCase(getStudentListThunk.pending, (state) => {
                 state.isLoading = true;
             })
@@ -114,6 +121,7 @@ const studentSlice = createSlice({
                 state.isLoading = false;
                 state.errors = action.payload;
             })
+
             .addCase(addGuardianThunk.pending, (state) => {
                 state.isLoading = true
             })
@@ -125,6 +133,7 @@ const studentSlice = createSlice({
                 state.isLoading = false
                 state.errors = action.payload
             })
+
             .addCase(addMentorsThunk.pending, (state) => {
                 state.isLoading = true
                 state.errors = null
@@ -137,6 +146,7 @@ const studentSlice = createSlice({
                 state.isLoading = false
                 state.errors = action.payload
             })
+
             .addCase(getSingleGuardiansThunk.pending, (state) => {
                 state.isLoading = true
                 state.errors = null
@@ -149,6 +159,7 @@ const studentSlice = createSlice({
                 state.isLoading = false
                 state.errors = action.payload
             })
+
             .addCase(updateGuardianThunk.pending, (state) => {
                 state.isLoading = true
                 state.errors = null
@@ -162,6 +173,7 @@ const studentSlice = createSlice({
                 state.isLoading = false
                 state.errors = action.payload
             })
+
             .addCase(getSingleMentorsThunk.pending, (state) => {
                 state.isLoading = true
                 state.errors = null
@@ -174,6 +186,7 @@ const studentSlice = createSlice({
                 state.isLoading = false
                 state.errors = action.payload
             })
+
             .addCase(updateMentorThunk.pending, (state) => {
                 state.isLoading = true
                 state.errors = null
@@ -185,6 +198,52 @@ const studentSlice = createSlice({
             .addCase(updateMentorThunk.rejected, (state, action) => {
                 state.isLoading = false
                 state.errors = action.payload
+            })
+
+            .addCase(deleteSingleGuardianThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(deleteSingleGuardianThunk.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.errors = null
+                state.studentInfo.demographicsTab.userGuardian = state.studentInfo.demographicsTab.userGuardian.filter(
+                    (guardian) => guardian.id !== action.payload.guardianId
+                );
+            })
+            .addCase(deleteSingleGuardianThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+
+            .addCase(deleteMentorThunk.pending, (state) => {
+                state.isLoading = true
+                state.errors = null
+            })
+            .addCase(deleteMentorThunk.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.errors = null
+                state.studentInfo.demographicsTab.userMentors = state.studentInfo.demographicsTab.userMentors.filter(
+                    (mentor) => mentor.id !== action.payload.mentorId
+                );
+            })
+            .addCase(deleteMentorThunk.rejected, (state, action) => {
+                state.isLoading = false
+                state.errors = action.payload
+            })
+
+            .addCase(getApplicationStatusThunk.pending, (state) => {
+                state.isLoading = true;
+                state.errors = null;
+            })
+            .addCase(getApplicationStatusThunk.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.errors = null;
+                state.studentInfo.enrollmentTab.applicationData = action.payload;
+            })
+            .addCase(getApplicationStatusThunk.rejected, (state, action) => {
+                state.isLoading = false;
+                state.errors = action.payload;
             })
     },
 });

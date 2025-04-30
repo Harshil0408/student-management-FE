@@ -131,8 +131,20 @@ export const updateMentorThunk = createAsyncThunk(
     }
 )
 
-export const upsertStudentDemographicsThunk = createAsyncThunk(
-    'student/upsertStudentDemographics',
+export const addStudentDemographicsThunk = createAsyncThunk(
+    'student/addStudentDemographics',
+    async ({ studentId, data }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`/api/students/${studentId}/demographics`, data);
+            return response.data.demographicsDetails;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+export const updateStudentDemographicsThunk = createAsyncThunk(
+    'student/updateStudentDemographics',
     async ({ studentId, data }, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.put(`/api/students/${studentId}/demographics`, data);
@@ -142,3 +154,39 @@ export const upsertStudentDemographicsThunk = createAsyncThunk(
         }
     }
 );
+
+export const deleteSingleGuardianThunk = createAsyncThunk(
+    'student/deleteSingleGuardian',
+    async ({ studentId, guardianId }, { rejectWithValue }) => {
+        try {
+            await axiosInstance.delete(`/api/students/${studentId}/guardians/${guardianId}`)
+            return { guardianId };
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error.message)
+        }
+    }
+)
+
+export const deleteMentorThunk = createAsyncThunk(
+    'student/deleteSingleMentor',
+    async ({ studentId, mentorId }, { rejectWithValue }) => {
+        try {
+            await axiosInstance.delete(`/api/students/${studentId}/mentors/${mentorId}`)
+            return { mentorId };
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error.message)
+        }
+    }
+)
+
+export const getApplicationStatusThunk = createAsyncThunk(
+    'student/getApplicationStatus',
+    async ({ studentId }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.get(`/api/students/${studentId}/application-status`)
+            return response.data
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || error?.message)
+        }
+    }
+)

@@ -14,7 +14,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from '../../components/ui/button';
 import { AddIconSvg, EditSvg } from '../../assets/svg/Svg';
-import { getSingleMentorsThunk } from '../../store/thunks/studentThunk';
+import { deleteMentorThunk, getSingleMentorsThunk, getStudentDetailThunk } from '../../store/thunks/studentThunk';
 import { useParams } from 'react-router-dom';
 
 
@@ -29,6 +29,16 @@ const MentorsTable = ({ onAddMentor }) => {
             await dispatch(getSingleMentorsThunk({ studentId: id, mentorId })).unwrap()
         } catch (error) {
             console.log('error', error)
+        }
+    }
+
+    const deleteMentorData = async (mentorId) => {
+        try {
+            await dispatch(deleteMentorThunk({ studentId: id, mentorId })).unwrap().then(() => {
+                dispatch(getStudentDetailThunk(id))
+            })
+        } catch (error) {
+            console.log('error?.message', error?.message)
         }
     }
 
@@ -76,7 +86,7 @@ const MentorsTable = ({ onAddMentor }) => {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-40">
                                                         <DropdownMenuItem onClick={() => getSingleMentorData(student._id)} >Edit</DropdownMenuItem>
-                                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => deleteMentorData(student._id)}>Delete</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

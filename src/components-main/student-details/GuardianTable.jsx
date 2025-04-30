@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AddIconSvg, EditSvg } from '../../assets/svg/Svg';
 import { Button } from '../../components/ui/button';
 import { useParams } from 'react-router-dom';
-import { getSingleGuardiansThunk } from '../../store/thunks/studentThunk';
+import { deleteSingleGuardianThunk, getSingleGuardiansThunk, getStudentDetailThunk } from '../../store/thunks/studentThunk';
 
 const GuardianTable = ({ onAddGuardian }) => {
 
@@ -27,6 +27,16 @@ const GuardianTable = ({ onAddGuardian }) => {
     const getGuaridianData = async (guardianId) => {
         try {
             await dispatch(getSingleGuardiansThunk({ studentId: id, guardianId })).unwrap();
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
+
+    const deleteGuardian = async (guardianId) => {
+        try {
+            await dispatch(deleteSingleGuardianThunk({ studentId: id, guardianId })).unwrap().then(() => {
+                dispatch(getStudentDetailThunk(id))
+            })
         } catch (error) {
             console.log('error', error)
         }
@@ -74,8 +84,8 @@ const GuardianTable = ({ onAddGuardian }) => {
                                                     </div>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-40">
-                                                    <DropdownMenuItem onClick={() => getGuaridianData(student?._id)}>Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => getGuaridianData(student._id)}>Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => deleteGuardian(student._id)}>Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
